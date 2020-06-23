@@ -2,6 +2,10 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
 var exec = require('child_process').exec;
+const mv = require('mv');
+const WEB_DIR_SOURCE = '~/projects/fusion-web'
+const API_DIR_SOURCE = '~/projects/fusion-backend'
+const WEB_DIR_DIST = '/var/www/html'
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -22,21 +26,23 @@ app.post('/payload', function (req, res) {
 	console.log(req.body.pusher.name + ' just pushed to ' + req.body.repository.name);
 
 	console.log('pulling code from GitHub...');
+	switch (req.body.repository.name) {
+		case 'fusion-web':
+			build(WEB_DIR_SOURCE);
+			exec(`rm -rf ${WEB_DIR_SOURCE}`, execCallback);
+			mv(WEB_DIR_SOURCE + '/dist', WEB_DIR_DIST, {mkdirp: true}, function(err) {
+				// done. it first created all the necessary directories, and then
+				// tried fs.rename, then falls back to using ncp to copy the dir
+				// to dest and then rimraf to remove the source dir
+			  });
+			break;
+		case 'fusion-backend':
+			build(API_DIR_SOURCE);
+			break;
+		default:
+			break;
+	}
 
-	// reset any changes that have been made locally
-	exec('git -C ~/projects/wackcoon-device reset --hard', execCallback);
-
-	// and ditch any files that have been added locally too
-	exec('git -C ~/projects/wackcoon-device clean -df', execCallback);
-
-	// now pull down the latest
-	exec('git -C ~/projects/wackcoon-device pull -f', execCallback);
-
-	// and npm install with --production
-	exec('npm -C ~/projects/wackcoon-device install --production', execCallback);
-
-	// and run tsc
-	exec('tsc', execCallback);
 });
 
 app.listen(5000, function () {
@@ -46,4 +52,22 @@ app.listen(5000, function () {
 function execCallback(err, stdout, stderr) {
 	if(stdout) console.log(stdout);
 	if(stderr) console.log(stderr);
+}
+
+function build(project_dir){
+		// reset any changes that have been made locally
+		exec(`git -C ${project_dir} reset --hard`, execCallback);
+
+		// and ditch any files that have been added locally too
+		exec(`git -C ${project_dir} clean -df`, execCallback);
+	
+		// now pull down the latest
+		exec(`git -C ${project_dir} pull -f`, execCallback);
+	
+		// and npm install with --production
+		exec(`yarn -C ${project_dir} install --production`, execCallback);
+		exec(`yarn -C ${project_dir} test`, execCallback);
+		exec(`yarn -C ${project_dir} build`, execCallback);
+		// and run tsc
+		// exec('tsc', execCallback);
 }
