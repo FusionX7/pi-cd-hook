@@ -29,7 +29,7 @@ app.post('/payload', function (req, res) {
 	switch (req.body.repository.name) {
 		case 'fusion-web':
 			build(WEB_DIR_SOURCE);
-			exec(`rm -rf ${WEB_DIR_SOURCE}`, execCallback);
+			fsExtra.emptyDirSync(WEB_DIR_DIST);
 			mv(WEB_DIR_SOURCE + '/dist', WEB_DIR_DIST, {mkdirp: true}, function(err) {
 				// done. it first created all the necessary directories, and then
 				// tried fs.rename, then falls back to using ncp to copy the dir
