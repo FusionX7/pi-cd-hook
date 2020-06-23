@@ -71,7 +71,7 @@ function copyAssets(err, stdout, stderr){
 	}
 	fsExtra.emptyDirSync(WEB_DIR_DIST);
 			mv(WEB_DIR_SOURCE + '/build', WEB_DIR_DIST, {mkdirp: true}, function(err) {
-				send(error);
+				send(err);
 				// done. it first created all the necessary directories, and then
 				// tried fs.rename, then falls back to using ncp to copy the dir
 				// to dest and then rimraf to remove the source dir
