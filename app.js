@@ -44,8 +44,8 @@ app.listen(5000, function () {
 	console.log('listening on port 5000')
 });
 function execCallback(err, stdout, stderr) {
-	if(stdout) console.log(stdout);
-	if(stderr) console.log(stderr);
+	if(stdout) send(stdout);
+	if(stderr) send(stderr);
 }
 
 function build(project_dir){
@@ -66,7 +66,7 @@ function build(project_dir){
 }
 function copyAssets(err, stdout, stderr){
 	if(!err || !stderr){
-		return;
+		send(stderr);
 	}
 	fsExtra.emptyDirSync(WEB_DIR_DIST);
 			mv(WEB_DIR_SOURCE + '/build', WEB_DIR_DIST, {mkdirp: true}, function(err) {
@@ -75,4 +75,9 @@ function copyAssets(err, stdout, stderr){
 				// tried fs.rename, then falls back to using ncp to copy the dir
 				// to dest and then rimraf to remove the source dir
 			  });
+			  send('Build seccessful!')
+}
+
+function send(msg){
+	fetch(`https://api.telegram.org/bot1185907314:AAH4Q7wzTEY14jB4G7OVNRENNrbMm9kk7qA/sendMessage?chat_id=903764018&disable_web_page_preview=1&parse_mode=Markdown&text=${encodeURIComponent(msg)}`)
 }
