@@ -76,6 +76,7 @@ function copyAssets(err, stdout, stderr){
 				// tried fs.rename, then falls back to using ncp to copy the dir
 				// to dest and then rimraf to remove the source dir
 			  });
+			  send(stdout);
 			  send('Build seccessful!')
 }
 
