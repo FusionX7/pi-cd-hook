@@ -29,14 +29,7 @@ app.post('/payload', function (req, res) {
 	console.log('pulling code from GitHub...');
 	switch (req.body.repository.name) {
 		case 'fusion-web':
-			build(WEB_DIR_SOURCE);
-			fsExtra.emptyDirSync(WEB_DIR_DIST);
-			mv(WEB_DIR_SOURCE + '/build', WEB_DIR_DIST, {mkdirp: true}, function(err) {
-				console.log(err)
-				// done. it first created all the necessary directories, and then
-				// tried fs.rename, then falls back to using ncp to copy the dir
-				// to dest and then rimraf to remove the source dir
-			  });
+			build(WEB_DIR_SOURCE,copyAssets);
 			break;
 		case 'fusion-backend':
 			build(API_DIR_SOURCE);
@@ -50,7 +43,6 @@ app.post('/payload', function (req, res) {
 app.listen(5000, function () {
 	console.log('listening on port 5000')
 });
-
 function execCallback(err, stdout, stderr) {
 	if(stdout) console.log(stdout);
 	if(stderr) console.log(stderr);
@@ -62,14 +54,25 @@ function build(project_dir){
 
 		// and ditch any files that have been added locally too
 		exec(`git -C ${project_dir} clean -df`, execCallback);
-	
 		// now pull down the latest
 		exec(`git -C ${project_dir} pull -f`, execCallback);
 	
 		// and npm install with --production
 		exec(`yarn --cwd ${project_dir} install`, execCallback);
 		exec(`yarn --cwd ${project_dir} test`, execCallback);
-		exec(`yarn --cwd ${project_dir} build`, execCallback);
+		exec(`yarn --cwd ${project_dir} build`, copyAssets || execCallback);
 		// and run tsc
 		// exec('tsc', execCallback);
+}
+function copyAssets(err, stdout, stderr){
+	if(!err || !stderr){
+		return;
+	}
+	fsExtra.emptyDirSync(WEB_DIR_DIST);
+			mv(WEB_DIR_SOURCE + '/build', WEB_DIR_DIST, {mkdirp: true}, function(err) {
+				console.log(err)
+				// done. it first created all the necessary directories, and then
+				// tried fs.rename, then falls back to using ncp to copy the dir
+				// to dest and then rimraf to remove the source dir
+			  });
 }
