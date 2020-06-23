@@ -56,19 +56,20 @@ function execCallback(err, stdout, stderr) {
 }
 
 function build(project_dir){
+		exec(`cd ${project_dir}`, execCallback);
 		// reset any changes that have been made locally
-		exec(`git -C ${project_dir} reset --hard`, execCallback);
+		exec(`git reset --hard`, execCallback);
 
 		// and ditch any files that have been added locally too
-		exec(`git -C ${project_dir} clean -df`, execCallback);
+		exec(`git -C clean -df`, execCallback);
 	
 		// now pull down the latest
-		exec(`git -C ${project_dir} pull -f`, execCallback);
+		exec(`git -C pull -f`, execCallback);
 	
 		// and npm install with --production
-		exec(`yarn --cwd ${project_dir} install`, execCallback);
-		exec(`yarn --cwd ${project_dir} test`, execCallback);
-		exec(`yarn --cwd ${project_dir} build`, execCallback);
+		exec(`yarn install`, execCallback);
+		exec(`yarn test`, execCallback);
+		exec(`yarn build`, execCallback);
 		// and run tsc
 		// exec('tsc', execCallback);
 }
