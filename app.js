@@ -66,8 +66,8 @@ function build(project_dir){
 		exec(`git -C ${project_dir} pull -f`, execCallback);
 	
 		// and npm install with --production
-		exec(`yarn -C ${project_dir} install --production`, execCallback);
-		exec(`yarn -C ${project_dir} test`, execCallback);
+		exec(`yarn -C ${project_dir}`, execCallback);
+		exec(`yarn -C ${project_dir}`, execCallback);
 		exec(`yarn -C ${project_dir} build`, execCallback);
 		// and run tsc
 		// exec('tsc', execCallback);
