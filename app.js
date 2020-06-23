@@ -3,6 +3,7 @@ var bodyParser = require('body-parser');
 var app = express();
 var exec = require('child_process').exec;
 const mv = require('mv');
+const fsExtra = require('fs-extra')
 const WEB_DIR_SOURCE = '~/projects/fusion-web'
 const API_DIR_SOURCE = '~/projects/fusion-backend'
 const WEB_DIR_DIST = '/var/www/html'
