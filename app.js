@@ -4,8 +4,8 @@ var app = express();
 var exec = require('child_process').exec;
 const mv = require('mv');
 const fsExtra = require('fs-extra')
-const WEB_DIR_SOURCE = '~/projects/fusion-web'
-const API_DIR_SOURCE = '~/projects/fusion-backend'
+const WEB_DIR_SOURCE = '/home/pi/projects/fusion-web'
+const API_DIR_SOURCE = '/home/pi/projects/fusion-backend'
 const WEB_DIR_DIST = '/var/www/html'
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -31,7 +31,8 @@ app.post('/payload', function (req, res) {
 		case 'fusion-web':
 			build(WEB_DIR_SOURCE);
 			fsExtra.emptyDirSync(WEB_DIR_DIST);
-			mv(WEB_DIR_SOURCE + '/dist', WEB_DIR_DIST, {mkdirp: true}, function(err) {
+			mv(WEB_DIR_SOURCE + '/build', WEB_DIR_DIST, {mkdirp: true}, function(err) {
+				console.log(err)
 				// done. it first created all the necessary directories, and then
 				// tried fs.rename, then falls back to using ncp to copy the dir
 				// to dest and then rimraf to remove the source dir
@@ -56,20 +57,19 @@ function execCallback(err, stdout, stderr) {
 }
 
 function build(project_dir){
-		exec(`cd ${project_dir}`, execCallback);
 		// reset any changes that have been made locally
-		exec(`git reset --hard`, execCallback);
+		exec(`git -C ${project_dir} reset --hard`, execCallback);
 
 		// and ditch any files that have been added locally too
-		exec(`git -C clean -df`, execCallback);
+		exec(`git -C ${project_dir} clean -df`, execCallback);
 	
 		// now pull down the latest
-		exec(`git -C pull -f`, execCallback);
+		exec(`git -C ${project_dir} pull -f`, execCallback);
 	
 		// and npm install with --production
-		exec(`yarn install`, execCallback);
-		exec(`yarn test`, execCallback);
-		exec(`yarn build`, execCallback);
+		exec(`yarn --cwd ${project_dir} install`, execCallback);
+		exec(`yarn --cwd ${project_dir} test`, execCallback);
+		exec(`yarn --cwd ${project_dir} build`, execCallback);
 		// and run tsc
 		// exec('tsc', execCallback);
 }
