@@ -14,21 +14,20 @@ app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.htm');
-	console.log('get /');
 });
 
 app.get('/payload', function (req, res) {
     res.sendStatus(200);
-	console.log('get /payload');
 });
 
 app.post('/payload', function (req, res) {
 	res.sendStatus(200);
 	//verify that the payload is a push from the correct repo
 	//verify repository.name == 'wackcoon-device' or repository.full_name = 'DanielEgan/wackcoon-device'
-	console.log(req.body.pusher.name + ' just pushed to ' + req.body.repository.name);
-	send(JSON.stringify(req.body))
-	console.log('pulling code from GitHub...');
+	const pushedBranch = req.body.ref.toString().split('/').slice(-1)[0];
+
+	send(`<u>${req.body.pusher.name}</u><i> just pushed to </i> + <b>${req.body.ref}</b>`);
+	if(pushedBranch !== 'master') return;
 	switch (req.body.repository.name) {
 		case 'fusion-web':
 			build(WEB_DIR_SOURCE,copyAssets);
@@ -89,5 +88,5 @@ async function copyAssets(err, stdout, stderr){
 }
 
 function send(msg){
-	fetch(`https://api.telegram.org/bot1185907314:AAH4Q7wzTEY14jB4G7OVNRENNrbMm9kk7qA/sendMessage?chat_id=903764018&disable_web_page_preview=1&parse_mode=Markdown&text=${encodeURIComponent(msg)}`)
+	fetch(`https://api.telegram.org/bot1185907314:AAH4Q7wzTEY14jB4G7OVNRENNrbMm9kk7qA/sendMessage?chat_id=903764018&disable_web_page_preview=1&parse_mode=HTML&text=${encodeURIComponent(msg)}`)
 }
