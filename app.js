@@ -65,12 +65,14 @@ function build(project_dir){
 		// and run tsc
 		// exec('tsc', execCallback);
 }
-function copyAssets(err, stdout, stderr){
-	if(!err || !stderr){
-		send(stderr);
+async function copyAssets(err, stdout, stderr){
+	if(err || stderr){
+		send(err || stderr);
 	}
-	fsExtra.emptyDirSync(WEB_DIR_DIST);
-			mv(WEB_DIR_SOURCE + '/build', WEB_DIR_DIST, {mkdirp: true}, function(err) {
+	await fsExtra.emptyDir(WEB_DIR_DIST).catch(err=>{
+		send(err);
+	});
+			mv(WEB_DIR_SOURCE + '/build', WEB_DIR_DIST, function(err) {
 				if(err){
 					send(err);
 					return;
