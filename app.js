@@ -26,7 +26,7 @@ app.post('/payload', function (req, res) {
 	//verify repository.name == 'wackcoon-device' or repository.full_name = 'DanielEgan/wackcoon-device'
 	const pushedBranch = req.body.ref.toString().split('/').slice(-1)[0];
 
-	send(`<u>${req.body.pusher.name}</u><i> just pushed to </i> + <b>${req.body.ref}</b>`);
+	send(`<b>${req.body.pusher.name}</b>just pushed to <b>${req.body.ref}</b>`);
 	if(pushedBranch !== 'master') return;
 	switch (req.body.repository.name) {
 		case 'fusion-web':
