@@ -29,13 +29,13 @@ app.post('/payload', function (req, res) {
 	send(`<a href="${req.body.repository.html_url}">${req.body.repository.name}</a>
 	<b>${req.body.pusher.name}</b> just pushed to <b>${req.body.ref}</b>
 	<a href="${req.body.head_commit.url}">${req.body.head_commit.message}</a>`);
-	if(pushedBranch !== 'master') return;
+	if(pushedBranch !== 'master' || pushedBranch !== 'staging') return;
 	switch (req.body.repository.name) {
 		case 'fusion-web':
-			build(WEB_DIR_SOURCE,copyAssets);
+			build(branch,WEB_DIR_SOURCE,copyAssets);
 			break;
 		case 'fusion-backend':
-			build(API_DIR_SOURCE);
+			build(branch,API_DIR_SOURCE);
 			break;
 		default:
 			break;
@@ -51,7 +51,8 @@ function execCallback(err, stdout, stderr) {
 	if(stderr) send(stderr);
 }
 
-function build(project_dir){
+function build(branch, project_dir, afterBuildTask){
+		exec(`git -C ${project_dir} checkout ${branch}`, execCallback);
 		// reset any changes that have been made locally
 		exec(`git -C ${project_dir} reset --hard`, execCallback);
 
@@ -63,7 +64,7 @@ function build(project_dir){
 		// and npm install with --production
 		exec(`yarn --cwd ${project_dir} install`, execCallback);
 		exec(`yarn --cwd ${project_dir} test`, execCallback);
-		exec(`yarn --cwd ${project_dir} build`, copyAssets || execCallback);
+		exec(`yarn --cwd ${project_dir} build`, afterBuildTask || execCallback);
 		// and run tsc
 		// exec('tsc', execCallback);
 }
