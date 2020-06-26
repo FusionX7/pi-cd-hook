@@ -32,10 +32,10 @@ app.post('/payload', function (req, res) {
 	if(pushedBranch === 'master' || pushedBranch === 'staging')
 	switch (req.body.repository.name) {
 		case 'fusion-web':
-			build(branch,WEB_DIR_SOURCE,copyAssets);
+			build(pushedBranch,WEB_DIR_SOURCE,copyAssets);
 			break;
 		case 'fusion-backend':
-			build(branch,API_DIR_SOURCE);
+			build(pushedBranch,API_DIR_SOURCE);
 			break;
 		default:
 			break;
@@ -52,7 +52,6 @@ function execCallback(err, stdout, stderr) {
 }
 
 function build(branch, project_dir, afterBuildTask){
-		exec(`git -C ${project_dir} checkout ${branch}`, execCallback);
 		// reset any changes that have been made locally
 		exec(`git -C ${project_dir} reset --hard`, execCallback);
 
@@ -60,7 +59,7 @@ function build(branch, project_dir, afterBuildTask){
 		exec(`git -C ${project_dir} clean -df`, execCallback);
 		// now pull down the latest
 		exec(`git -C ${project_dir} pull -f`, execCallback);
-	
+		exec(`git -C ${project_dir} checkout ${branch}`, execCallback);
 		// and npm install with --production
 		exec(`yarn --cwd ${project_dir} install`, execCallback);
 		exec(`yarn --cwd ${project_dir} test`, execCallback);
