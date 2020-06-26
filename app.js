@@ -29,7 +29,7 @@ app.post('/payload', function (req, res) {
 	send(`<a href="${req.body.repository.html_url}">${req.body.repository.name}</a>
 	<b>${req.body.pusher.name}</b> just pushed to <b>${req.body.ref}</b>
 	<a href="${req.body.head_commit.url}">${req.body.head_commit.message}</a>`);
-	if(pushedBranch !== 'master' && pushedBranch !== 'staging') return;
+	if(pushedBranch === 'master' || pushedBranch === 'staging')
 	switch (req.body.repository.name) {
 		case 'fusion-web':
 			build(branch,WEB_DIR_SOURCE,copyAssets);
