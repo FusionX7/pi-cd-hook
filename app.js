@@ -30,6 +30,7 @@ app.post('/payload', function (req, res) {
 	<b>${req.body.pusher.name}</b> just pushed to <b>${req.body.ref}</b>
 	<a href="${req.body.head_commit.url}">${req.body.head_commit.message}</a>`);
 	if(pushedBranch === 'master' || pushedBranch === 'staging')
+	send(`Deploying for branch ${pushedBranch}`);
 	switch (req.body.repository.name) {
 		case 'fusion-web':
 			build(pushedBranch,WEB_DIR_SOURCE,copyAssets);
@@ -52,14 +53,14 @@ function execCallback(err, stdout, stderr) {
 }
 
 function build(branch, project_dir, afterBuildTask){
+		exec(`git -C ${project_dir} fetch`);
 		// reset any changes that have been made locally
-		exec(`git -C ${project_dir} reset --hard`, execCallback);
-
+		exec(`git -C ${project_dir} reset --hard`);
+		exec(`git -C ${project_dir} checkout ${branch}`);
 		// and ditch any files that have been added locally too
-		exec(`git -C ${project_dir} clean -df`, execCallback);
+		exec(`git -C ${project_dir} clean -df`);
 		// now pull down the latest
 		exec(`git -C ${project_dir} pull -f`, execCallback);
-		exec(`git -C ${project_dir} checkout ${branch}`, execCallback);
 		// and npm install with --production
 		exec(`yarn --cwd ${project_dir} install`, execCallback);
 		exec(`yarn --cwd ${project_dir} test`, execCallback);
@@ -83,7 +84,7 @@ async function copyAssets(err, stdout, stderr){
 				// tried fs.rename, then falls back to using ncp to copy the dir
 				// to dest and then rimraf to remove the source dir
 				send(stdout);
-				send('Build seccessful!')
+				send('Deployd succeeded!')
 			  });
 
 			  
