@@ -20,17 +20,17 @@ app.get('/payload', function (req, res) {
     res.sendStatus(200);
 });
 
-app.post('/payload', function (req, res) {
+app.post('/payload', async function (req, res) {
 	res.sendStatus(200);
 	//verify that the payload is a push from the correct repo
 	//verify repository.name == 'wackcoon-device' or repository.full_name = 'DanielEgan/wackcoon-device'
 	const pushedBranch = req.body.ref.toString().split('/').slice(-1)[0];
 
-	send(`<a href="${req.body.repository.html_url}">${req.body.repository.name}</a>
+	await send(`<a href="${req.body.repository.html_url}">${req.body.repository.name}</a>
 	<b>${req.body.pusher.name}</b> just pushed to <b>${req.body.ref}</b>
 	<a href="${req.body.head_commit.url}">${req.body.head_commit.message}</a>`);
 	if(pushedBranch === 'master' || pushedBranch === 'staging')
-	send(`Deploying for branch ${pushedBranch}`);
+	await send(`Deploying for branch ${pushedBranch}`);
 	switch (req.body.repository.name) {
 		case 'fusion-web':
 			build(pushedBranch,WEB_DIR_SOURCE,copyAssets);
@@ -47,10 +47,6 @@ app.post('/payload', function (req, res) {
 app.listen(5000, function () {
 	console.log('listening on port 5000')
 });
-function execCallback(err, stdout, stderr) {
-	if(stdout) send(stdout);
-	if(stderr) send(stderr);
-}
 
 function build(branch, project_dir, afterBuildTask){
 		exec(`git -C ${project_dir} fetch`);
@@ -60,22 +56,20 @@ function build(branch, project_dir, afterBuildTask){
 		// and ditch any files that have been added locally too
 		exec(`git -C ${project_dir} clean -df`);
 		// now pull down the latest
-		exec(`git -C ${project_dir} pull -f`, execCallback);
+		await send(exec(`git -C ${project_dir} pull -f`));
 		// and npm install with --production
-		exec(`yarn --cwd ${project_dir} install`, execCallback);
-		exec(`yarn --cwd ${project_dir} test`, execCallback);
-		exec(`yarn --cwd ${project_dir} build`, afterBuildTask || execCallback);
-		// and run tsc
-		// exec('tsc', execCallback);
+		await send(exec(`yarn --cwd ${project_dir} install`));
+		await send(exec(`yarn --cwd ${project_dir} test`));
+		await send(exec(`yarn --cwd ${project_dir} build`));
+		afterBuildTask && afterBuildTask();
 }
 async function copyAssets(err, stdout, stderr){
-	if(err || stderr){
-		send(err || stderr);
+	try {
+		await fsExtra.emptyDir(WEB_DIR_DIST)
+	} catch (error) {
+		send(error);
 	}
-	await fsExtra.emptyDir(WEB_DIR_DIST).catch(err=>{
-		send(err);
-	});
-			mv(WEB_DIR_SOURCE + '/build', WEB_DIR_DIST, function(err) {
+	mv(WEB_DIR_SOURCE + '/build', WEB_DIR_DIST,async function(err) {
 				if(err){
 					send(err);
 					return;
@@ -83,7 +77,7 @@ async function copyAssets(err, stdout, stderr){
 				// done. it first created all the necessary directories, and then
 				// tried fs.rename, then falls back to using ncp to copy the dir
 				// to dest and then rimraf to remove the source dir
-				send(stdout);
+				await send(stdout);
 				send('Deployd succeeded!')
 			  });
 
@@ -91,5 +85,5 @@ async function copyAssets(err, stdout, stderr){
 }
 
 function send(msg){
-	fetch(`https://api.telegram.org/bot1185907314:AAH4Q7wzTEY14jB4G7OVNRENNrbMm9kk7qA/sendMessage?chat_id=903764018&disable_web_page_preview=1&parse_mode=HTML&text=${encodeURIComponent(msg)}`)
+	if(msg) return fetch(`https://api.telegram.org/bot1185907314:AAH4Q7wzTEY14jB4G7OVNRENNrbMm9kk7qA/sendMessage?chat_id=903764018&disable_web_page_preview=1&parse_mode=HTML&text=${encodeURIComponent(msg)}`)
 }
