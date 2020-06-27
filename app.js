@@ -63,7 +63,7 @@ async function build(branch, project_dir, afterBuildTask){
 		await send(executeSync(`yarn --cwd ${project_dir} build`));
 		afterBuildTask && afterBuildTask();
 }
-async function copyAssets(err, stdout, stderr){
+async function copyAssets(){
 	try {
 		await fsExtra.emptyDir(WEB_DIR_DIST)
 	} catch (error) {
@@ -74,10 +74,6 @@ async function copyAssets(err, stdout, stderr){
 					send(err);
 					return;
 					}
-				// done. it first created all the necessary directories, and then
-				// tried fs.rename, then falls back to using ncp to copy the dir
-				// to dest and then rimraf to remove the source dir
-				await send(stdout);
 				send('Deploy succeeded!')
 			  });
 
@@ -93,6 +89,7 @@ function executeSync(command, options){
 		const output = exec(command, {encoding: 'utf8',...options});
 		return output.toString();
 	} catch (error) {
-		send(error.toString())
+		send(`<b>Tests result</b>
+		error.stderr.toString()`)
 	}
 }
