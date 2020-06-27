@@ -1,7 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
-var exec = require('child_process').exec;
+var exec = require('child_process').execSync;
 const mv = require('mv');
 const fsExtra = require('fs-extra');
 const fetch = require("node-fetch");
@@ -48,19 +48,19 @@ app.listen(5000, function () {
 	console.log('listening on port 5000')
 });
 
-function build(branch, project_dir, afterBuildTask){
-		exec(`git -C ${project_dir} fetch`);
+async function build(branch, project_dir, afterBuildTask){
+		executeSync(`git -C ${project_dir} fetch`);
 		// reset any changes that have been made locally
-		exec(`git -C ${project_dir} reset --hard`);
-		exec(`git -C ${project_dir} checkout ${branch}`);
+		executeSync(`git -C ${project_dir} reset --hard`);
+		executeSync(`git -C ${project_dir} checkout ${branch}`);
 		// and ditch any files that have been added locally too
-		exec(`git -C ${project_dir} clean -df`);
+		executeSync(`git -C ${project_dir} clean -df`);
 		// now pull down the latest
-		await send(exec(`git -C ${project_dir} pull -f`));
+		await send(executeSync(`git -C ${project_dir} pull -f`));
 		// and npm install with --production
-		await send(exec(`yarn --cwd ${project_dir} install`));
-		await send(exec(`yarn --cwd ${project_dir} test`));
-		await send(exec(`yarn --cwd ${project_dir} build`));
+		await send(executeSync(`yarn --cwd ${project_dir} install`));
+		await send(executeSync(`yarn --cwd ${project_dir} test_ci`));
+		await send(executeSync(`yarn --cwd ${project_dir} build`));
 		afterBuildTask && afterBuildTask();
 }
 async function copyAssets(err, stdout, stderr){
@@ -78,7 +78,7 @@ async function copyAssets(err, stdout, stderr){
 				// tried fs.rename, then falls back to using ncp to copy the dir
 				// to dest and then rimraf to remove the source dir
 				await send(stdout);
-				send('Deployd succeeded!')
+				send('Deploy succeeded!')
 			  });
 
 			  
@@ -86,4 +86,13 @@ async function copyAssets(err, stdout, stderr){
 
 function send(msg){
 	if(msg) return fetch(`https://api.telegram.org/bot1185907314:AAH4Q7wzTEY14jB4G7OVNRENNrbMm9kk7qA/sendMessage?chat_id=903764018&disable_web_page_preview=1&parse_mode=HTML&text=${encodeURIComponent(msg)}`)
+}
+
+function executeSync(command, options){
+	try {
+		const output = exec(command, {encoding: 'utf8',...options});
+		return output.toString();
+	} catch (error) {
+		send(error.toString())
+	}
 }
