@@ -90,6 +90,6 @@ function executeSync(command, options){
 		return output.toString();
 	} catch (error) {
 		send(`<b>Tests result</b>
-		error.stderr.toString()`)
+		${error.stderr.toString()}`)
 	}
 }
