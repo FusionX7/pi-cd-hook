@@ -89,7 +89,8 @@ function executeSync(command, options){
 		const output = exec(command, {encoding: 'utf8',...options});
 		return output.toString();
 	} catch (error) {
-		send(`<b>Tests result</b>
-		${error.stderr.toString()}`)
+		if(command.includes('test_ci')) send(`<b>Tests failed!</b>`);
+		else send(error.message);
+		throw new Error();
 	}
 }
